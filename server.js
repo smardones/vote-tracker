@@ -2,7 +2,7 @@ const express = require("express");
 const sqlite3 = require('sqlite3').verbose();
 const PORT = process.env.PORT || 3001;
 const app = express();
-const inputCheck - require('./utils/inputCheck');
+const inputCheck = require('./utils/inputCheck');
 //Express middleware
 app.use(express.urlencoded({extended: false}));
 app.use(express.json());
@@ -17,7 +17,11 @@ const db = new sqlite3.Database('./db/election.db', err => {
 
 // Get all candidates
 app.get('/api/candidates', (req, res) => {
-    const sql = `SELECT * FROM candidates`;
+    const sql = `SELECT candidates.*, parties.name
+                    AS party_name
+                    FROM candidates
+                    LEFT JOIN parties
+                    ON candidates.party_id = parties.id`;
     const params = [];
 
     db.all(sql, params, (err, rows) => {
@@ -35,8 +39,12 @@ app.get('/api/candidates', (req, res) => {
 
 // Get single candidate
 app.get('/api/candidate/:id', (req, res) => {
-    const sql = `SELECT * FROM candidates 
-                 WHERE id = ?`;
+    const sql = `SELECT candidates.*, parties.name 
+    AS party_name 
+    FROM candidates 
+    LEFT JOIN parties 
+    ON candidates.party_id = parties.id 
+    WHERE candidates.id = ?`;
     const params = [req.params.id];
     db.get(sql, params, (err, row) => {
       if (err) {
